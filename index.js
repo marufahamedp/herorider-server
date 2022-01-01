@@ -44,10 +44,8 @@ async function run() {
     try {
         await client.connect();
         const database = client.db('HeroRider');
-        const projectsCollection = database.collection('projects');
         const usersCollection = database.collection('users');
         const servicesCollection = database.collection('services');
-        const reviewsCollection = database.collection('reviews');
         const ordersCollection = database.collection('orders');
 
         //users 
@@ -69,10 +67,66 @@ async function run() {
         })
 
         app.post('/users', verifyToken, async (req, res) => {
-            const user = req.body;
+            const name = req.body.name;
+            const email = req.body.email;
+            const age = req.body.age;
+            const address = req.body.address;
+            const number = req.body.number;
+            const area = req.body.area;
+            const carname = req.body.carname;
+            const carmodel = req.body.carmodel;
+            const carpalate = req.body.carpalate;
+            const vehicle = req.body.vehicle;
+            const usertype = req.body.usertype;
+            let pic = null;
+            if (req.files?.licenceimage) {
+                pic = req.files.licenceimage;
+               
+            }
+        
+            let picData = '';
+            if(pic?.data){
+                picData = pic.data;
+            }
+            const encodedPic = picData.toString('base64');
+            const imageBuffer = Buffer.from(encodedPic, 'base64');
+            const nidfrontimage = req.files.nidfrontimage;
+            const nidbackimage = req.files.nidbackimage;
+            const profileimage = req.files.profileimage;
+
+            const picData2 = nidfrontimage.data;
+            const picData3 = nidbackimage.data;
+            const picData4 = profileimage.data;
+
+            const encodedPic2 = picData2.toString('base64');
+            const encodedPic3 = picData3.toString('base64');
+            const encodedPic4 = picData4.toString('base64');
+
+            const imageBuffer2 = Buffer.from(encodedPic2, 'base64');
+            const imageBuffer3 = Buffer.from(encodedPic3, 'base64');
+            const imageBuffer4 = Buffer.from(encodedPic4, 'base64');
+            const user = {
+                name,
+                email,
+                age,
+                address,
+                number,
+                area,
+                carname,
+                carmodel,
+                carpalate,
+                vehicle,
+                usertype,
+                licencepic: imageBuffer,
+                nid1pic: imageBuffer2,
+                nid2pic: imageBuffer3,
+                profilepic: imageBuffer4
+            }
+            console.log(user);
             const result = await usersCollection.insertOne(user);
             console.log(result);
             res.json(result);
+           
         });
 
         app.put('/users', verifyToken, async (req, res) => {
@@ -81,6 +135,13 @@ async function run() {
             const options = { upsert: true };
             const updateDoc = { $set: user };
             const result = await usersCollection.updateOne(filter, updateDoc, options);
+            res.json(result);
+        });
+        app.put('/users', verifyToken, async (req, res) => {
+            const user = req.body;
+            const options = { upsert: true };
+            const updateDoc = { $set: user };
+            const result = await usersCollection.updateOne( updateDoc, options);
             res.json(result);
         });
 
@@ -105,68 +166,7 @@ async function run() {
 
 
 
-        app.get('/projects', async (req, res) => {
-            const cursor = projectsCollection.find({});
-            const project = await cursor.toArray();
-            res.json(project);
-        });
-
-        app.get('/projects', async (req, res) => {
-            const email = req.query.email;
-            const date = req.query.date;
-            const query = { email: email, date: date }
-            const cursor = projectsCollection.find(query);
-            const projects = await cursor.toArray();
-            res.json(projects);
-        })
-
-        app.get('/projects/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: ObjectId(id) };
-            const result = await projectsCollection.findOne(query);
-            res.json(result);
-        })
-
-
-
-        app.put('/projects/:id', async (req, res) => {
-            const id = req.params.id;
-            const payment = req.body;
-            const filter = { _id: ObjectId(id) };
-            const updateDoc = {
-                $set: {
-                    payment: payment
-                }
-            };
-            const result = await projectsCollection.updateOne(filter, updateDoc);
-            res.json(result);
-        });
-        app.delete('/projects/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: ObjectID(id) };
-            const review = await projectsCollection.deleteOne(query);
-            res.json(review);
-        })
-        app.post('/projects', async (req, res) => {
-            const name = req.body.name;
-            const details = req.body.details;
-            const postDate = req.body.postDate;
-            const pic = req.files.image;
-            const picData = pic.data;
-            console.log(req.body);
-            console.log('files', req.files);
-            const encodedPic = picData.toString('base64');
-            const imageBuffer = Buffer.from(encodedPic, 'base64');
-            const projects = {
-                name,
-                details,
-                postDate,
-                image: imageBuffer
-            }
-            const result = await projectsCollection.insertOne(projects);
-            res.json(result);
-        })
-
+      
 
 
 
@@ -205,11 +205,8 @@ async function run() {
             const name = req.body.name;
             const details = req.body.details;
             const price = req.body.price;
-            const technology = req.body.technology;
-            const postDate = req.body.postDate;
             const pic = req.files.image;
             const picData = pic.data;
-            console.log(req.body);
             console.log('files', req.files);
             const encodedPic = picData.toString('base64');
             const imageBuffer = Buffer.from(encodedPic, 'base64');
@@ -217,8 +214,6 @@ async function run() {
                 name,
                 details,
                 price,
-                technology,
-                postDate,
                 image: imageBuffer
             }
             const result = await servicesCollection.insertOne(services);
@@ -227,92 +222,31 @@ async function run() {
 
 
 
-        //get reviews
-        app.get('/reviews', async (req, res) => {
-            const cursor = reviewsCollection.find({});
-            const review = await cursor.toArray()
-            res.send(review)
+        app.put('/services/:id', async (req, res) => {
+            const id = req.params.id;
+            const payment = req.body;
+            const filter = { _id: ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    payment: payment
+                }
+            };
+            const result = await servicesCollection.updateOne(filter, updateDoc);
+            res.json(result);
         });
 
-        // post reviews
-        app.post('/reviews', async (req, res) => {
-            const review = req.body;
-            const result = await reviewsCollection.insertOne(review);
-            console.log('hitting the review', req.body);
-            console.log('got user', result);
-            res.json(result);
+
+        app.post('/create-payment-intent', async (req, res) => {
+            const paymentInfo = req.body;
+            const amount = paymentInfo.price * 100;
+            const paymentIntent = await stripe.paymentIntents.create({
+                currency: 'usd',
+                amount: amount,
+                payment_method_types: ['card']
+            });
+            res.json({ clientSecret: paymentIntent.client_secret })
         })
-        // get single reviews
-
-        app.get('/reviews/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: ObjectId(id) };
-            const review = await reviewsCollection.findOne(query);
-            res.json(review);
-        })
-
-        // delete single reviews
-        app.delete('/reviews/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: ObjectID(id) };
-            const review = await reviewsCollection.deleteOne(query);
-            res.json(review);
-        })
-
-
-
-        //blogs
-        app.get('/blogs', async (req, res) => {
-            const cursor = blogsCollection.find({});
-            const blog = await cursor.toArray();
-            res.json(blog);
-        });
-
-        app.get('/blogs', async (req, res) => {
-            const email = req.query.email;
-            const date = req.query.date;
-            const query = { email: email, date: date }
-            const cursor = blogsCollection.find(query);
-            const blogs = await cursor.toArray();
-            res.json(blogs);
-        })
-
-
-        app.get('/blogs/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: ObjectId(id) };
-            const result = await blogsCollection.findOne(query);
-            res.json(result);
-        })
-
-
-        app.delete('/blogs/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: ObjectID(id) };
-            const review = await blogsCollection.deleteOne(query);
-            res.json(review);
-        })
-        app.post('/blogs', async (req, res) => {
-            const name = req.body.name;
-            const details = req.body.details;
-            const postDate = req.body.postDate;
-            const pic = req.files.image;
-            const picData = pic.data;
-            console.log(req.body);
-            console.log('files', req.files);
-            const encodedPic = picData.toString('base64');
-            const imageBuffer = Buffer.from(encodedPic, 'base64');
-            const blogs = {
-                name,
-                details,
-                postDate,
-                image: imageBuffer
-            }
-            const result = await blogsCollection.insertOne(blogs);
-            res.json(result);
-        })
-
-
+     
 
 
         // get orders
